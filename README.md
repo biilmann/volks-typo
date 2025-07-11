@@ -316,6 +316,32 @@ The theme uses CSS Grid for layouts. Key files:
 - `src/styles/global.css` - Responsive breakpoints
 
 ## 🤝 Contributing
+#
+## Notion Document Publisher Setup
+
+Follow these steps to configure the Notion-to-Markdown publishing system:
+
+1. Install additional dependencies:
+   ```bash
+   npm install @notionhq/client @octokit/rest openai jsonwebtoken @netlify/functions @netlify/blobs @netlify/edge-functions marked
+   npm install -D @astrojs/netlify
+   ```
+
+2. Configure environment variables (e.g. in Netlify settings or `.env` file):
+   ```env
+   NOTION_API_KEY=secret_xxx
+   OPENAI_API_KEY=sk-xxx
+   GITHUB_CLIENT_ID=your_client_id
+   GITHUB_CLIENT_SECRET=your_client_secret
+   JWT_SECRET=your_jwt_secret_key
+   ```
+
+3. Update `netlify/lib/config.mts` with your GitHub repository and content/image directories.
+
+4. Deploy to Netlify. Ensure your functions and edge-functions are in the `netlify/functions` and `netlify/edge-functions` folders, respectively.
+
+5. Visit `/admin` on your deployed site to authenticate via GitHub and start publishing Notion documents.
+
 
 Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.
 

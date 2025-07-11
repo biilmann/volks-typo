@@ -1,0 +1,76 @@
+---
+const { id } = Astro.params;
+---
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Preview Document</title>
+  <style>
+    body { font-family: sans-serif; margin: 2rem; }
+    header a { margin-bottom: 1rem; display: inline-block; }
+    #content img { max-width: 100%; }
+  </style>
+</head>
+<body>
+  <header><a href="/admin">&larr; Back to Admin</a></header>
+  <h1 id="title"></h1>
+  <p id="meta"></p>
+  <div id="content"></div>
+  <button id="pr">Create Pull Request</button>
+  <button id="publish">Publish Directly</button>
+  <p id="message"></p>
+  <script type="module">
+    import renderMarkdown from '/scripts/preview.js';
+
+    const titleEl = document.getElementById('title');
+    const metaEl = document.getElementById('meta');
+    const contentEl = document.getElementById('content');
+    const prBtn = document.getElementById('pr');
+    const pubBtn = document.getElementById('publish');
+    const msgEl = document.getElementById('message');
+
+    async function init() {
+      const res = await fetch(`/api/get-draft/${id}`);
+      if (res.status === 401) { window.location.href = '/admin/login'; return; }
+      if (!res.ok) { msgEl.textContent = 'Failed to load document'; return; }
+      const doc = await res.json();
+      titleEl.textContent = doc.meta.title;
+      metaEl.textContent = `${doc.meta.author} | ${doc.meta.publishDate}`;
+      contentEl.innerHTML = renderMarkdown(doc.markdown);
+
+      prBtn.onclick = createPR;
+      pubBtn.onclick = publish;
+    }
+
+    async function createPR() {
+      const res = await fetch('/api/create-github-pr', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ documentId: id }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        msgEl.innerHTML = `PR created: <a href="${data.prUrl}" target="_blank">${data.prUrl}</a>`;
+      } else {
+        msgEl.textContent = 'Failed to create PR';
+      }
+    }
+
+    async function publish() {
+      const res = await fetch('/api/publish-post', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ documentId: id }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        msgEl.innerHTML = `Published: <code>${data.filePath}</code>`;
+      } else {
+        msgEl.textContent = 'Failed to publish post';
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>

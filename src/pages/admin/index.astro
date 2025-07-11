@@ -1,0 +1,29 @@
+---
+---
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Dashboard</title>
+  <style>
+    body { font-family: sans-serif; margin: 2rem; }
+    nav a { margin-right: 1rem; }
+  </style>
+</head>
+<body>
+  <h1>Admin Dashboard</h1>
+  <nav>
+    <a href="/admin/publish">Publish Document</a>
+    <a href="/api/auth-logout">Logout</a>
+  </nav>
+  <script>
+    (async () => {
+      const res = await fetch('/api/notion?s=__auth_check__');
+      if (res.status === 401) {
+        window.location.href = '/admin/login';
+      }
+    })();
+  </script>
+</body>
+</html>
