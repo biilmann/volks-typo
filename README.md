@@ -230,6 +230,50 @@ Your content here...
 | `image` | string | No | Featured image path |
 | `draft` | boolean | No | Hide from listings if true |
 
+## Notion Document Publisher (Phase 1)
+
+The following steps set up the backend for the Notion-to-Markdown publishing system using Netlify Functions.
+
+### 1. Install Dependencies
+
+```bash
+npm install @notionhq/client @octokit/rest openai jsonwebtoken
+```
+
+### 2. Configure Environment Variables
+
+Create environment variables in your Netlify dashboard (or a local `.env` file):
+
+```env
+NOTION_API_KEY=your_notion_api_key
+OPENAI_API_KEY=your_openai_api_key
+GITHUB_CLIENT_ID=your_github_client_id
+GITHUB_CLIENT_SECRET=your_github_client_secret
+JWT_SECRET=your_jwt_secret_key
+```
+
+### 3. Netlify Configuration
+
+Ensure you have a `netlify.toml` in the project root with the following build settings:
+
+```toml
+[build]
+  command   = "npm run build"
+  publish   = "dist"
+  functions = "netlify/functions"
+  edge_functions = "netlify/edge-functions"
+```
+
+### 4. Configuration File
+
+Edit `netlify/lib/config.mts` to set your GitHub repo and publishing directories.
+
+### 5. Deploy
+
+Deploy your site to Netlify. The new API endpoints will be available at `/api/*`, and the image edge function at `/article-images/*`.
+
+---
+
 ## 🛠️ Commands
 
 All commands are run from the root of the project:
