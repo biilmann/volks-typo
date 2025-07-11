@@ -1,7 +1,7 @@
 ---
 import { config } from '../config';
 
-const { base = '' } = Astro.site ? { base: import.meta.env.BASE_URL } : { base: '' };
+const base = import.meta.env.BASE_URL;
 ---
 
 <header class="site-header">
@@ -16,18 +16,18 @@ const { base = '' } = Astro.site ? { base: import.meta.env.BASE_URL } : { base: 
     </button>
     
     <div class="site-title">
-      <a href={base + "/"}>
-        <img src={base + "/site-title.svg"} alt={config.title} class="title-svg" />
+      <a href={base}>
+        <img src={base + "site-title.svg"} alt={config.title} class="title-svg" />
       </a>
     </div>
     
     <div class="header-controls">
       <nav class="main-navigation" role="navigation" aria-label="Main navigation">
         <ul class="nav-list">
-          <li><a href={base + "/"} class="nav-link">Home</a></li>
-          <li><a href={base + "/blog"} class="nav-link">Blog</a></li>
-          <li><a href={base + "/categories"} class="nav-link">Categories</a></li>
-          <li><a href={base + "/about"} class="nav-link">About</a></li>
+          <li><a href={base} class="nav-link">Home</a></li>
+          <li><a href={base + "blog"} class="nav-link">Blog</a></li>
+          <li><a href={base + "categories"} class="nav-link">Categories</a></li>
+          <li><a href={base + "about"} class="nav-link">About</a></li>
         </ul>
       </nav>
       
@@ -40,7 +40,7 @@ const { base = '' } = Astro.site ? { base: import.meta.env.BASE_URL } : { base: 
           <span class="github-star-text">Star</span>
         </a>
         
-        <a href={base + "/rss.xml"} class="rss-toggle" title="RSS Feed">
+        <a href={base + "rss.xml"} class="rss-toggle" title="RSS Feed">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
             <circle cx="5" cy="19" r="2" fill="currentColor"/>
             <path d="M3 3v2c8.284 0 15 6.716 15 15h2c0-9.389-7.611-17-17-17z" fill="currentColor"/>
@@ -62,10 +62,10 @@ const { base = '' } = Astro.site ? { base: import.meta.env.BASE_URL } : { base: 
 
 <nav class="mobile-menu" id="mobile-menu" aria-label="Mobile navigation">
   <ul class="mobile-nav-list">
-    <li><a href={base + "/"} class="mobile-nav-link">Home</a></li>
-    <li><a href={base + "/blog"} class="mobile-nav-link">Blog</a></li>
-    <li><a href={base + "/categories"} class="mobile-nav-link">Categories</a></li>
-    <li><a href={base + "/about"} class="mobile-nav-link">About</a></li>
+    <li><a href={base} class="mobile-nav-link">Home</a></li>
+    <li><a href={base + "blog"} class="mobile-nav-link">Blog</a></li>
+    <li><a href={base + "categories"} class="mobile-nav-link">Categories</a></li>
+    <li><a href={base + "about"} class="mobile-nav-link">About</a></li>
   </ul>
 </nav>
 
@@ -133,7 +133,7 @@ const { base = '' } = Astro.site ? { base: import.meta.env.BASE_URL } : { base: 
 
   async function initSearch() {
     try {
-      const response = await fetch('/volks-typo/search.json');
+      const response = await fetch(base + 'search.json');
       searchData = await response.json();
     } catch (error) {
       console.error('Failed to load search data:', error);
@@ -206,7 +206,7 @@ const { base = '' } = Astro.site ? { base: import.meta.env.BASE_URL } : { base: 
     const resultsHTML = results.map(post => `
       <article class="search-result">
         <h3 class="search-result-title">
-          <a href="/volks-typo${post.url}">${post.title}</a>
+          <a href="${base}${post.url}">${post.title}</a>
         </h3>
         <time class="search-result-date">${new Date(post.date).toLocaleDateString('en-US', {
           year: 'numeric',
