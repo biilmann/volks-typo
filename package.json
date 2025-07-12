@@ -36,10 +36,19 @@
     "@fontsource/oswald": "^5.2.6",
     "@fontsource/roboto-condensed": "^5.2.6",
     "@fontsource/work-sans": "^5.2.6",
-    "astro": "^5.9.1"
+    "@netlify/blobs": "^10.0.4",
+    "@netlify/edge-functions": "^2.15.6",
+    "@netlify/functions": "^4.1.10",
+    "@notionhq/client": "^4.0.1",
+    "@octokit/rest": "^22.0.0",
+    "astro": "^5.9.1",
+    "jsonwebtoken": "^9.0.2",
+    "marked": "^16.0.0",
+    "openai": "^5.9.0"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.3",
+    "@astrojs/netlify": "^6.4.1",
     "@typescript-eslint/eslint-plugin": "^8.0.0",
     "@typescript-eslint/parser": "^8.0.0",
     "eslint": "^9.0.0",

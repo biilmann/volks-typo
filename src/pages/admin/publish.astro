@@ -1,0 +1,103 @@
+---
+---
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Publish Notion Document</title>
+  <style>
+    body { font-family: sans-serif; margin: 2rem; }
+    #results li { margin: 0.5rem 0; }
+    #overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.5);
+      display: flex; align-items: center; justify-content: center;
+      color: #fff;
+    }
+    #overlay div { background: #333; padding: 1rem; border-radius: 4px; }
+  </style>
+</head>
+<body>
+  <h1>Notion Document Publisher</h1>
+  <input type="text" id="search" placeholder="Search Notion documents" />
+  <ul id="results"></ul>
+  <div id="overlay" style="display:none;">
+    <div>
+      <p id="message"></p>
+      <progress id="progressBar" value="0" max="100"></progress>
+    </div>
+  </div>
+  <script type="module">
+    import debounce from '/scripts/debounce.js';
+    const searchInput = document.getElementById('search');
+    const resultsList = document.getElementById('results');
+    const overlay = document.getElementById('overlay');
+    const progressBar = document.getElementById('progressBar');
+    const messageEl = document.getElementById('message');
+
+    (async () => {
+      const res = await fetch('/api/notion?s=__auth_check__');
+      if (res.status === 401) window.location.href = '/admin/login';
+    })();
+
+    searchInput.addEventListener('input', debounce(onSearch, 300));
+
+    async function onSearch() {
+      const q = searchInput.value.trim();
+      if (!q) {
+        resultsList.innerHTML = '';
+        return;
+      }
+      const res = await fetch(`/api/notion?s=${encodeURIComponent(q)}`);
+      if (!res.ok) {
+        alert('Search failed');
+        return;
+      }
+      const data = await res.json();
+      resultsList.innerHTML = data.map(item => 
+        `<li>
+          <strong>${item.title}</strong>
+          <em>Last edited: ${new Date(item.last_edited_time).toLocaleString()}</em>
+          <button data-id="${item.id}">Convert to Blog Post</button>
+        </li>`
+      ).join('');
+      document.querySelectorAll('button[data-id]').forEach(btn => {
+        btn.addEventListener('click', () => startProcess(btn.dataset.id));
+      });
+    }
+
+    async function startProcess(id) {
+      overlay.style.display = 'flex';
+      const startRes = await fetch('/api/process-document', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ documentId: id }),
+      });
+      if (!startRes.ok) {
+        alert('Failed to start processing');
+        overlay.style.display = 'none';
+        return;
+      }
+      pollStatus(id);
+    }
+
+    async function pollStatus(id) {
+      const res = await fetch(`/api/status/${id}`);
+      if (!res.ok) { console.error('Status failed'); return; }
+      const st = await res.json();
+      progressBar.value = st.progress;
+      messageEl.textContent = st.message;
+      if (st.status === 'processing') {
+        setTimeout(() => pollStatus(id), 1500);
+      } else if (st.status === 'done') {
+        window.location.href = `/admin/preview-${id}`;
+      } else if (st.status === 'error') {
+        alert('Processing error: ' + st.message);
+        overlay.style.display = 'none';
+      }
+    }
+  </script>
+</body>
+</html>
