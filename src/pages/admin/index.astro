@@ -1,0 +1,31 @@
+---
+import Layout from '../../components/Layout.astro';
+import { config } from '../../config';
+---
+
+<Layout title={`Dashboard | ${config.title}`}>  
+  <div class="admin-container">
+    <div id="dashboard-error" class="alert error"></div>
+    <div id="dashboard-content">
+      <h1>Dashboard</h1>
+      <nav>
+        <a href="/admin/publish" class="btn">Start Publishing</a>
+        <a href="/api/auth/logout" class="btn">Logout</a>
+      </nav>
+    </div>
+  </div>
+</Layout>
+
+<script type="module">
+async function checkAuth() {
+  try {
+    const res = await fetch(`/api/notion?s=test`);
+    if (res.status === 401) {
+      window.location.href = '/admin/login';
+    }
+  } catch (err) {
+    console.error(err);
+  }
+}
+checkAuth();
+</script>

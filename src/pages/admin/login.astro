@@ -1,0 +1,26 @@
+---
+import Layout from '../../components/Layout.astro';
+import { config } from '../../config';
+---
+
+<Layout title={`Login | ${config.title}`}>  
+  <div class="admin-container">
+    <div class="card">
+      <h1>Login</h1>
+      <div id="login-error" class="alert error"></div>
+      <a href="/api/auth/login" class="btn">Login with GitHub</a>
+    </div>
+  </div>
+</Layout>
+
+<script type="module">
+  document.addEventListener('DOMContentLoaded', () => {
+    const params = new URLSearchParams(window.location.search);
+    const error = params.get('error');
+    if (error) {
+      const el = document.getElementById('login-error');
+      el.textContent = error;
+      el.style.display = 'block';
+    }
+  });
+</script>
