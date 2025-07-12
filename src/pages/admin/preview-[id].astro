@@ -1,0 +1,83 @@
+---
+import Layout from '../../components/Layout.astro';
+import { config } from '../../config';
+import { getStore } from '@netlify/blobs';
+import { marked } from 'marked';
+
+const { id } = Astro.params;
+const drafts = getStore('drafts');
+const data = await drafts.get(id);
+const doc = data ? JSON.parse(data) : null;
+const html = doc ? marked.parse(doc.markdown) : '';
+---
+
+<Layout title={`Preview - ${doc?.meta.title} | ${config.title}`}>  
+  <div class="admin-container">
+    <div class="card">
+      <h1>{doc?.meta.title}</h1>
+      <dl>
+        <dt>Author</dt><dd>{doc?.meta.author}</dd>
+        <dt>Publish Date</dt><dd>{doc?.meta.publishDate}</dd>
+        <dt>Description</dt><dd>{doc?.meta.description}</dd>
+      </dl>
+    </div>
+    <div class="card">
+      <article set:html={html}></article>
+    </div>
+    <div class="card">
+      <button id="pr-btn" class="btn">Create PR</button>
+      <button id="publish-btn" class="btn">Publish Directly</button>
+      <div id="action-message" class="alert"></div>
+    </div>
+  </div>
+</Layout>
+
+<script type="module">
+const prBtn = document.getElementById('pr-btn');
+const pubBtn = document.getElementById('publish-btn');
+const msgEl = document.getElementById('action-message');
+
+prBtn.addEventListener('click', async () => {
+  try {
+    const res = await fetch('/api/create-github-pr', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({documentId: id})
+    });
+    if (res.status === 401) {
+      window.location.href = '/admin/login';
+      return;
+    }
+    const { prUrl } = await res.json();
+    msgEl.textContent = 'PR created: ' + prUrl;
+    msgEl.className = 'alert success';
+    msgEl.style.display = 'block';
+  } catch(err) {
+    msgEl.textContent = err.message;
+    msgEl.className = 'alert error';
+    msgEl.style.display = 'block';
+  }
+});
+
+pubBtn.addEventListener('click', async () => {
+  try {
+    const res = await fetch('/api/publish-post', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({documentId: id})
+    });
+    if (res.status === 401) {
+      window.location.href = '/admin/login';
+      return;
+    }
+    const { filePath } = await res.json();
+    msgEl.textContent = 'Published to ' + filePath;
+    msgEl.className = 'alert success';
+    msgEl.style.display = 'block';
+  } catch(err) {
+    msgEl.textContent = err.message;
+    msgEl.className = 'alert error';
+    msgEl.style.display = 'block';
+  }
+});
+</script>

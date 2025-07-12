@@ -1,0 +1,118 @@
+---
+import Layout from '../../components/Layout.astro';
+import { config } from '../../config';
+---
+
+<Layout title={`Publish | ${config.title}`}>  
+  <div class="admin-container">
+    <h1>Publish Document</h1>
+    <input id="search-input" type="text" placeholder="Search Notion Documents" class="form-control" />
+    <div id="search-results"></div>
+  </div>
+  <div id="overlay" class="overlay">
+    <div class="processing-box">
+      <div id="spinner" class="spinner"></div>
+      <div id="processing-message">Initializing...</div>
+      <div class="progress-bar"><div id="progress-inner" class="progress-bar-inner"></div></div>
+    </div>
+  </div>
+</Layout>
+
+<script type="module">
+const resultsEl = document.getElementById('search-results');
+const inputEl = document.getElementById('search-input');
+let timeoutId;
+
+inputEl.addEventListener('input', () => {
+  clearTimeout(timeoutId);
+  timeoutId = setTimeout(search, 300);
+});
+
+async function search() {
+  const query = inputEl.value.trim();
+  if (!query) {
+    resultsEl.innerHTML = '';
+    return;
+  }
+  try {
+    const res = await fetch(`/api/notion?s=${encodeURIComponent(query)}`);
+    if (res.status === 401) {
+      window.location.href = '/admin/login';
+      return;
+    }
+    const results = await res.json();
+    renderResults(results);
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+function renderResults(results) {
+  resultsEl.innerHTML = '';
+  results.forEach(doc => {
+    const div = document.createElement('div');
+    div.className = 'card';
+    div.innerHTML = `
+      <h3>${doc.title}</h3>
+      <p>Last edited: ${new Date(doc.last_edited_time).toLocaleString()}</p>
+      <button data-id="${doc.id}" class="btn convert-btn">Convert</button>
+    `;
+    resultsEl.appendChild(div);
+  });
+  document.querySelectorAll('.convert-btn').forEach(btn => {
+    btn.addEventListener('click', () => startProcess(btn.dataset.id));
+  });
+}
+
+async function startProcess(id) {
+  try {
+    const res = await fetch('/api/process-document', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({documentId: id})
+    });
+    if (res.status === 401) {
+      window.location.href = '/admin/login';
+      return;
+    }
+    const { id: docId } = await res.json();
+    showOverlay();
+    await pollStatus(docId);
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+function showOverlay() {
+  document.getElementById('overlay').classList.add('active');
+}
+
+async function pollStatus(documentId) {
+  let attempts = 0;
+  const maxAttempts = 80;
+  while (attempts < maxAttempts) {
+    const res = await fetch(`/api/status/${documentId}`);
+    if (res.status === 401) {
+      window.location.href = '/admin/login';
+      return;
+    }
+    const status = await res.json();
+    updateProgress(status.progress, status.message);
+    if (status.status === 'done') {
+      window.location.href = `/admin/preview-${documentId}`;
+      return;
+    }
+    if (status.status === 'error') {
+      throw new Error(status.error || 'Processing failed');
+    }
+    attempts++;
+    await new Promise(res => setTimeout(res, 1500));
+  }
+  throw new Error('Processing timed out');
+}
+
+function updateProgress(progress, message) {
+  document.getElementById('processing-message').textContent = message;
+  document.getElementById('progress-inner').style.width = progress + '%';
+}
+</script>

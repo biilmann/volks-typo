@@ -238,6 +238,69 @@ All commands are run from the root of the project:
 |---------|--------|
 | `npm install` | Install dependencies |
 | `npm run dev` | Start local dev server at `localhost:4321` |
+
+## 🗒️ Notion Document Publisher
+
+Follow the recipe below to set up Notion document publishing:
+
+### Install Additional Dependencies
+
+```bash
+npm install @notionhq/client @octokit/rest openai jsonwebtoken @netlify/blobs @netlify/functions marked
+```
+
+### Environment Variables
+
+Configure these in Netlify UI or your local `.env` file:
+
+```bash
+NOTION_API_KEY=secret_xxx
+OPENAI_API_KEY=sk-xxx
+GITHUB_CLIENT_ID=your_client_id
+GITHUB_CLIENT_SECRET=your_client_secret
+JWT_SECRET=your_jwt_secret_key
+```
+
+### Netlify Configuration
+
+Add a `netlify.toml` at the project root:
+
+```toml
+[build]
+  command   = "npm run build"
+  publish   = "dist"
+  functions = "netlify/functions"
+  edge_functions = "netlify/edge-functions"
+
+[dev]
+  functions = "netlify/functions"
+  edge_functions = "netlify/edge-functions"
+```
+
+### Project Structure
+
+Your new files live under:
+
+```
+netlify/
+  lib/
+    config.mts
+    auth.mts
+  functions/
+    auth-login.mts
+    auth-callback.mts
+    auth-logout.mts
+    notion.mts
+    process-document.mts
+    process-document-background.mts
+    status.mts
+    create-github-pr.mts
+    publish-post.mts
+edge-functions/
+  image.ts
+```
+
+Refer to the project README for detailed implementation of each step.
 | `npm run build` | Build production site to `./dist/` |
 | `npm run preview` | Preview your build locally |
 | `npm run astro ...` | Run CLI commands like `astro add` |
