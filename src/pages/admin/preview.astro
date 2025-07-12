@@ -1,0 +1,88 @@
+---
+const { searchParams } = new URL(Astro.request.url);
+const id = searchParams.get('id');
+---
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Preview Document</title>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <style>
+    body { margin: 0; font-family: sans-serif; background: #f5f5f5; }
+    .container { max-width: 800px; margin: 2rem auto; padding: 1rem; background: #fff; border-radius: 8px; }
+    .metadata { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
+    .metadata div { background: #f0f0f0; padding: 0.5rem; border-radius: 4px; }
+    #content { line-height: 1.6; }
+    .actions { margin-top: 1rem; }
+    .btn { margin-right: 0.5rem; padding: 0.4rem 0.8rem; background: #0070f3; color: #fff; border: none; border-radius: 4px; cursor: pointer; transition: background 0.2s; }
+    .btn:hover { background: #005bb5; }
+    .btn-secondary { background: transparent; color: #0070f3; border: 1px solid #0070f3; }
+    .btn-secondary:hover { background: #e6f0ff; }
+    .message { margin-top: 1rem; color: green; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1 id="title">Loading...</h1>
+    <div class="metadata">
+      <div id="author"></div>
+      <div id="publishDate"></div>
+      <div id="description" style="grid-column: span 2;"></div>
+    </div>
+    <div id="content"></div>
+    <div class="actions">
+      <button id="prBtn" class="btn">Create PR</button>
+      <button id="publishBtn" class="btn btn-secondary">Publish Directly</button>
+    </div>
+    <div id="message" class="message"></div>
+  </div>
+  <script>
+    async function checkAuth() {
+      try {
+        const res = await fetch('/api/notion?s=test');
+        if (res.status === 401) window.location.href = '/admin/login';
+      } catch {
+        window.location.href = '/admin/login';
+      }
+    }
+    async function loadDraft() {
+      if (!id) { alert('No document ID'); return; }
+      const res = await fetch(`/api/get-draft/${id}`);
+      if (res.status === 401) { window.location.href = '/admin/login'; return; }
+      const data = await res.json();
+      document.getElementById('title').textContent = data.meta.title;
+      document.getElementById('author').textContent = `Author: ${data.meta.author}`;
+      document.getElementById('publishDate').textContent = `Publish Date: ${data.meta.publishDate}`;
+      document.getElementById('description').textContent = data.meta.description;
+      document.getElementById('content').innerHTML = marked.parse(data.markdown);
+      document.getElementById('prBtn').onclick = createPR;
+      document.getElementById('publishBtn').onclick = publish;
+    }
+    async function createPR() {
+      const res = await fetch('/api/create-github-pr', {
+        method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ documentId: id })
+      });
+      const result = await res.json();
+      if (res.ok) {
+        document.getElementById('message').innerHTML = `PR created: <a href="${result.prUrl}" target="_blank">#${result.prNumber}</a>`;
+      } else {
+        document.getElementById('message').textContent = 'PR creation failed';
+      }
+    }
+    async function publish() {
+      const res = await fetch('/api/publish-post', {
+        method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ documentId: id })
+      });
+      const result = await res.json();
+      if (res.ok) {
+        document.getElementById('message').textContent = `Published to ${result.filePath}`;
+      } else {
+        document.getElementById('message').textContent = 'Publish failed';
+      }
+    }
+    document.addEventListener('DOMContentLoaded', async () => { await checkAuth(); await loadDraft(); });
+  </script>
+</body>
+</html>
