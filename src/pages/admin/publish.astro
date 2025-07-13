@@ -1,0 +1,116 @@
+---
+---
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Document Publisher</title>
+</head>
+<body>
+  <div class="admin-container">
+    <div class="admin-card">
+      <h1>Publish Document</h1>
+      <input id="search" class="input" type="text" placeholder="Search documents..." />
+      <div id="results"></div>
+    </div>
+    <div id="overlay" class="loading-overlay" style="display:none;">
+      <div id="overlay-message">Processing...</div>
+      <progress id="overlay-progress" max="100" value="0"></progress>
+    </div>
+  </div>
+  <script>
+    const searchInput = document.getElementById('search');
+    const resultsDiv = document.getElementById('results');
+    const overlay = document.getElementById('overlay');
+    const overlayMessage = document.getElementById('overlay-message');
+    const overlayProgress = document.getElementById('overlay-progress');
+    let timeout;
+    
+    searchInput.addEventListener('input', () => {
+      clearTimeout(timeout);
+      const query = searchInput.value.trim();
+      timeout = setTimeout(() => {
+        if (query) fetchSearch(query);
+      }, 300);
+    });
+
+    async function fetchSearch(query) {
+      try {
+        const res = await fetch(`/.netlify/functions/notion?s=${encodeURIComponent(query)}`);
+        if (res.status === 401) return window.location.href = '/admin/login';
+        const data = await res.json();
+        renderResults(data);
+      } catch (error) {
+        console.error(error);
+      }
+    }
+
+    function renderResults(items) {
+      resultsDiv.innerHTML = '';
+      items.forEach(item => {
+        const div = document.createElement('div');
+        div.innerHTML = `
+          <h3>${item.title}</h3>
+          <p>Last Edited: ${new Date(item.last_edited_time).toLocaleString()}</p>
+          <button class="button" data-id="${item.id}">Convert</button>
+        `;
+        resultsDiv.appendChild(div);
+      });
+      document.querySelectorAll('button[data-id]').forEach(btn => {
+        btn.addEventListener('click', () => startProcessing(btn.getAttribute('data-id')));
+      });
+    }
+
+    async function startProcessing(id) {
+      overlay.style.display = 'flex';
+      overlayMessage.textContent = 'Initializing...';
+      overlayProgress.value = 0;
+      try {
+        const res = await fetch('/.netlify/functions/process-document', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ documentId: id }),
+        });
+        if (res.status === 401) return window.location.href = '/admin/login';
+        const { id: docId } = await res.json();
+        await pollStatus(docId);
+      } catch (error) {
+        console.error(error);
+        overlayMessage.textContent = 'Error starting processing';
+      }
+    }
+
+    async function pollStatus(documentId) {
+      let attempts = 0;
+      const maxAttempts = 80;
+      while (attempts < maxAttempts) {
+        try {
+          const res = await fetch(`/.netlify/functions/status/${documentId}`);
+          if (res.status === 401) return window.location.href = '/admin/login';
+          const status = await res.json();
+          updateOverlay(status.progress, status.message);
+          if (status.status === 'done') {
+            window.location.href = `/admin/preview?id=${documentId}`;
+            return;
+          }
+          if (status.status === 'error') {
+            throw new Error(status.error || 'Processing failed');
+          }
+        } catch (error) {
+          console.error(error);
+          overlayMessage.textContent = 'Processing error';
+          return;
+        }
+        attempts++;
+        await new Promise(r => setTimeout(r, 1500));
+      }
+      overlayMessage.textContent = 'Processing timed out';
+    }
+
+    function updateOverlay(progress, message) {
+      overlayProgress.value = progress;
+      overlayMessage.textContent = message;
+    }
+  </script>
+</body>
+</html>
