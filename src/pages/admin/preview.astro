@@ -1,0 +1,91 @@
+---
+---
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Preview Document</title>
+</head>
+<body>
+  <div class="admin-container">
+    <div class="admin-card">
+      <h1 id="title"></h1>
+      <p><strong>Author:</strong> <span id="author"></span></p>
+      <p><strong>Description:</strong> <span id="description"></span></p>
+      <p><strong>Publish Date:</strong> <span id="publishDate"></span></p>
+      <div id="content"></div>
+      <div id="actions">
+        <button id="create-pr" class="button">Create PR</button>
+        <button id="publish" class="button secondary">Publish Directly</button>
+        <div id="message" class="alert" style="display:none;"></div>
+      </div>
+    </div>
+  </div>
+  <script type="module">
+    import { marked } from 'https://cdn.jsdelivr.net/npm/marked/marked.min.js';
+    (async () => {
+      const params = new URLSearchParams(window.location.search);
+      const documentId = params.get('id');
+      if (!documentId) return;
+      try {
+        const res = await fetch(`/.netlify/functions/get-draft/${documentId}`);
+        if (res.status === 401) return window.location.href = '/admin/login';
+        const data = await res.json();
+        const { meta, markdown } = data;
+        document.getElementById('title').textContent = meta.title;
+        document.getElementById('author').textContent = meta.author;
+        document.getElementById('description').textContent = meta.description;
+        document.getElementById('publishDate').textContent = meta.publishDate;
+        document.getElementById('content').innerHTML = marked(markdown);
+
+        document.getElementById('create-pr').addEventListener('click', async () => {
+          try {
+            const prRes = await fetch('/.netlify/functions/create-github-pr', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ documentId }),
+            });
+            const prData = await prRes.json();
+            const msg = document.getElementById('message');
+            if (prRes.ok) {
+              msg.className = 'alert success';
+              msg.innerHTML = `PR created: <a href="${prData.prUrl}" target="_blank">${prData.prUrl}</a>`;
+            } else {
+              msg.className = 'alert error';
+              msg.textContent = 'Error creating PR';
+            }
+            msg.style.display = 'block';
+          } catch (error) {
+            console.error(error);
+          }
+        });
+
+        document.getElementById('publish').addEventListener('click', async () => {
+          try {
+            const pubRes = await fetch('/.netlify/functions/publish-post', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ documentId }),
+            });
+            const pubData = await pubRes.json();
+            const msg = document.getElementById('message');
+            if (pubRes.ok) {
+              msg.className = 'alert success';
+              msg.textContent = `Published: ${pubData.filePath}`;
+            } else {
+              msg.className = 'alert error';
+              msg.textContent = 'Error publishing post';
+            }
+            msg.style.display = 'block';
+          } catch (error) {
+            console.error(error);
+          }
+        });
+
+      } catch (error) {
+        console.error(error);
+      }
+    })();
+  </script>
+</body>
+</html>
