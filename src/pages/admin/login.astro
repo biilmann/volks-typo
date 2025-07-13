@@ -1,0 +1,111 @@
+---
+import Layout from '../../components/Layout.astro';
+---
+
+<Layout title="Admin Login">
+  <main class="login-container">
+    <div class="login-card">
+      <h1>Document Publisher Login</h1>
+      <p>Authenticate with GitHub to access the document publisher.</p>
+      
+      <div class="error-message" id="error-message" style="display: none;"></div>
+      
+      <a href="/api/auth/login" class="btn btn-primary">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 0C5.374 0 0 5.373 0 12 0 17.302 3.438 21.8 8.207 23.387c.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0 1 12 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
+        </svg>
+        Login with GitHub
+      </a>
+      
+      <p class="login-note">
+        You must be an authorized user to access this system.
+      </p>
+    </div>
+  </main>
+</Layout>
+
+<style>
+  .login-container {
+    max-width: 400px;
+    margin: 4rem auto;
+    padding: 2rem;
+  }
+
+  .login-card {
+    background: #f5f5f5;
+    padding: 3rem 2rem;
+    border-radius: 8px;
+    text-align: center;
+    border: 1px solid #e0e0e0;
+  }
+
+  .btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: 4px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.2s;
+    border: 2px solid;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 2rem 0;
+  }
+
+  .btn-primary {
+    background: #dc2626;
+    color: white;
+    border-color: #dc2626;
+  }
+
+  .btn-primary:hover {
+    background: #b91c1c;
+    border-color: #b91c1c;
+  }
+
+  .error-message {
+    background: #fee2e2;
+    color: #dc2626;
+    padding: 1rem;
+    border-radius: 4px;
+    border: 1px solid #fecaca;
+    margin-bottom: 1rem;
+  }
+
+  .login-note {
+    color: #666;
+    font-size: 0.9rem;
+    margin-top: 1rem;
+  }
+
+  h1 {
+    color: #dc2626;
+    margin-bottom: 1rem;
+  }
+</style>
+
+<script>
+  // Show error messages from URL params
+  const urlParams = new URLSearchParams(window.location.search);
+  const error = urlParams.get('error');
+  
+  if (error) {
+    const errorMessage = document.getElementById('error-message');
+    let message = 'An error occurred';
+    
+    switch (error) {
+      case 'unauthorized':
+        message = 'You are not authorized to access this application.';
+        break;
+      case 'no_code':
+        message = 'Authentication failed: no authorization code received.';
+        break;
+      case 'auth_failed':
+        message = 'Authentication failed. Please try again.';
+        break;
+    }
+    
+    errorMessage.textContent = message;
+    errorMessage.style.display = 'block';
+  }
+</script>

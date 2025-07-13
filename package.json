@@ -36,7 +36,11 @@
     "@fontsource/oswald": "^5.2.6",
     "@fontsource/roboto-condensed": "^5.2.6",
     "@fontsource/work-sans": "^5.2.6",
-    "astro": "^5.9.1"
+    "@notionhq/client": "^4.0.1",
+    "@octokit/rest": "^22.0.0",
+    "astro": "^5.9.1",
+    "jsonwebtoken": "^9.0.2",
+    "openai": "^5.9.0"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.3",

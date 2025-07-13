@@ -1,0 +1,411 @@
+---
+import Layout from '../../components/Layout.astro';
+---
+
+<Layout title="Document Publisher">
+  <main class="publisher-container">
+    <div class="publisher-header">
+      <h1>Document Publisher</h1>
+      <a href="/admin" class="btn btn-outline">← Back to Dashboard</a>
+    </div>
+
+    <div class="search-section">
+      <div class="search-input-group">
+        <input 
+          type="text" 
+          id="search-input" 
+          placeholder="Search Notion documents..."
+          class="search-input"
+        />
+        <div class="search-spinner" id="search-spinner" style="display: none;">
+          <div class="spinner"></div>
+        </div>
+      </div>
+      
+      <div class="search-results" id="search-results"></div>
+    </div>
+
+    <!-- Processing Overlay -->
+    <div class="processing-overlay" id="processing-overlay" style="display: none;">
+      <div class="processing-content">
+        <h2>Processing Document</h2>
+        <div class="progress-bar">
+          <div class="progress-fill" id="progress-fill"></div>
+        </div>
+        <div class="progress-text" id="progress-text">Starting...</div>
+        <div class="processing-spinner">
+          <div class="spinner"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+</Layout>
+
+<style>
+  .publisher-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 2rem;
+  }
+
+  .publisher-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+  }
+
+  .search-section {
+    background: #f5f5f5;
+    padding: 2rem;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+  }
+
+  .search-input-group {
+    position: relative;
+    margin-bottom: 2rem;
+  }
+
+  .search-input {
+    width: 100%;
+    padding: 1rem;
+    border: 2px solid #ddd;
+    border-radius: 4px;
+    font-size: 1rem;
+    box-sizing: border-box;
+  }
+
+  .search-input:focus {
+    outline: none;
+    border-color: #dc2626;
+  }
+
+  .search-spinner {
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+
+  .search-results {
+    display: grid;
+    gap: 1rem;
+  }
+
+  .result-item {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 4px;
+    border: 1px solid #e0e0e0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .result-info h3 {
+    color: #dc2626;
+    margin: 0 0 0.5rem 0;
+  }
+
+  .result-info p {
+    color: #666;
+    margin: 0;
+    font-size: 0.9rem;
+  }
+
+  .btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: 4px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.2s;
+    border: 2px solid;
+    display: inline-block;
+    cursor: pointer;
+    background: none;
+    font-family: inherit;
+  }
+
+  .btn-primary {
+    background: #dc2626;
+    color: white;
+    border-color: #dc2626;
+  }
+
+  .btn-primary:hover {
+    background: #b91c1c;
+    border-color: #b91c1c;
+  }
+
+  .btn-outline {
+    background: transparent;
+    color: #333;
+    border-color: #333;
+  }
+
+  .btn-outline:hover {
+    background: #333;
+    color: white;
+  }
+
+  .processing-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+  }
+
+  .processing-content {
+    background: white;
+    padding: 3rem;
+    border-radius: 8px;
+    text-align: center;
+    max-width: 400px;
+    width: 90%;
+  }
+
+  .progress-bar {
+    width: 100%;
+    height: 20px;
+    background: #e0e0e0;
+    border-radius: 10px;
+    overflow: hidden;
+    margin: 1rem 0;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: #dc2626;
+    width: 0%;
+    transition: width 0.3s ease;
+  }
+
+  .progress-text {
+    color: #666;
+    margin-bottom: 1rem;
+  }
+
+  .processing-spinner {
+    margin-top: 1rem;
+  }
+
+  .spinner {
+    width: 20px;
+    height: 20px;
+    border: 2px solid #e0e0e0;
+    border-top: 2px solid #dc2626;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto;
+  }
+
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  h1 {
+    color: #dc2626;
+  }
+
+  h2 {
+    color: #dc2626;
+    margin-bottom: 1rem;
+  }
+
+  .error-message {
+    background: #fee2e2;
+    color: #dc2626;
+    padding: 1rem;
+    border-radius: 4px;
+    border: 1px solid #fecaca;
+    margin: 1rem 0;
+  }
+
+  @media (max-width: 768px) {
+    .publisher-header {
+      flex-direction: column;
+      gap: 1rem;
+      align-items: flex-start;
+    }
+
+    .result-item {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 1rem;
+    }
+  }
+</style>
+
+<script>
+  let searchTimeout;
+  let currentSearch = '';
+
+  const searchInput = document.getElementById('search-input');
+  const searchSpinner = document.getElementById('search-spinner');
+  const searchResults = document.getElementById('search-results');
+  const processingOverlay = document.getElementById('processing-overlay');
+  const progressFill = document.getElementById('progress-fill');
+  const progressText = document.getElementById('progress-text');
+
+  searchInput.addEventListener('input', (e) => {
+    const query = e.target.value.trim();
+    
+    clearTimeout(searchTimeout);
+    
+    if (!query) {
+      searchResults.innerHTML = '';
+      return;
+    }
+
+    searchTimeout = setTimeout(() => {
+      performSearch(query);
+    }, 300);
+  });
+
+  async function performSearch(query) {
+    if (query === currentSearch) return;
+    currentSearch = query;
+
+    searchSpinner.style.display = 'block';
+    
+    try {
+      const response = await fetch(`/api/notion?s=${encodeURIComponent(query)}`);
+      
+      if (response.status === 401) {
+        window.location.href = '/admin/login';
+        return;
+      }
+
+      if (!response.ok) {
+        throw new Error('Search failed');
+      }
+
+      const results = await response.json();
+      displayResults(results);
+      
+    } catch (error) {
+      console.error('Search error:', error);
+      searchResults.innerHTML = '<div class="error-message">Search failed. Please try again.</div>';
+    } finally {
+      searchSpinner.style.display = 'none';
+    }
+  }
+
+  function displayResults(results) {
+    if (results.length === 0) {
+      searchResults.innerHTML = '<p>No documents found.</p>';
+      return;
+    }
+
+    const resultsHtml = results.map(result => `
+      <div class="result-item">
+        <div class="result-info">
+          <h3>${escapeHtml(result.title)}</h3>
+          <p>Last edited: ${new Date(result.last_edited_time).toLocaleDateString()}</p>
+        </div>
+        <button class="btn btn-primary" onclick="convertDocument('${result.id}')">
+          Convert
+        </button>
+      </div>
+    `).join('');
+
+    searchResults.innerHTML = resultsHtml;
+  }
+
+  async function convertDocument(documentId) {
+    processingOverlay.style.display = 'flex';
+    progressFill.style.width = '0%';
+    progressText.textContent = 'Starting conversion...';
+
+    try {
+      // Start processing
+      const response = await fetch('/api/process-document', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ documentId }),
+      });
+
+      if (response.status === 401) {
+        window.location.href = '/admin/login';
+        return;
+      }
+
+      if (!response.ok) {
+        throw new Error('Failed to start processing');
+      }
+
+      const { id } = await response.json();
+      
+      // Poll status
+      await pollStatus(id);
+      
+    } catch (error) {
+      console.error('Conversion error:', error);
+      progressText.textContent = 'Conversion failed: ' + error.message;
+      setTimeout(() => {
+        processingOverlay.style.display = 'none';
+      }, 3000);
+    }
+  }
+
+  async function pollStatus(documentId) {
+    let attempts = 0;
+    const maxAttempts = 80; // 2 minutes
+
+    while (attempts < maxAttempts) {
+      try {
+        const response = await fetch(`/api/status/${documentId}`);
+        
+        if (response.status === 401) {
+          window.location.href = '/admin/login';
+          return;
+        }
+        
+        const status = await response.json();
+        
+        // Update progress UI
+        progressFill.style.width = status.progress + '%';
+        progressText.textContent = status.message;
+        
+        if (status.status === 'done') {
+          window.location.href = `/admin/preview#${documentId}`;
+          return;
+        }
+        
+        if (status.status === 'error') {
+          throw new Error(status.error || 'Processing failed');
+        }
+        
+        attempts++;
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        
+      } catch (error) {
+        console.error('Status check error:', error);
+        progressText.textContent = 'Status check failed: ' + error.message;
+        setTimeout(() => {
+          processingOverlay.style.display = 'none';
+        }, 3000);
+        return;
+      }
+    }
+    
+    throw new Error('Processing timed out');
+  }
+
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
+  // Make convertDocument globally available
+  window.convertDocument = convertDocument;
+</script>

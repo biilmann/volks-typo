@@ -1,0 +1,432 @@
+---
+import Layout from '../../components/Layout.astro';
+---
+
+<Layout title="Document Preview">
+  <main class="preview-container">
+    <div class="preview-header">
+      <h1>Document Preview</h1>
+      <a href="/admin/publish" class="btn btn-outline">← Back to Publisher</a>
+    </div>
+
+    <div class="loading-message" id="loading-message">
+      <p>Loading document...</p>
+    </div>
+
+    <div class="error-message" id="error-message" style="display: none;">
+      <h2>Error</h2>
+      <p id="error-text"></p>
+      <a href="/admin/publish" class="btn btn-primary">Return to Publisher</a>
+    </div>
+
+    <div class="preview-content" id="preview-content" style="display: none;">
+      <div class="metadata-section">
+        <h2>Metadata</h2>
+        <div class="metadata-grid" id="metadata-grid">
+          <!-- Will be populated by JavaScript -->
+        </div>
+      </div>
+
+      <div class="content-section">
+        <h2>Content Preview</h2>
+        <div class="markdown-preview" id="markdown-preview">
+          <!-- Content will be rendered by JavaScript -->
+        </div>
+      </div>
+
+      <div class="actions-section">
+        <h2>Publishing Options</h2>
+        <div class="action-buttons">
+          <button class="btn btn-primary" onclick="createPR()">
+            Create Pull Request
+          </button>
+          <button class="btn btn-outline" onclick="publishDirect()">
+            Publish Directly
+          </button>
+        </div>
+        
+        <div class="success-message" id="success-message" style="display: none;"></div>
+        <div class="error-message" id="action-error" style="display: none;"></div>
+      </div>
+    </div>
+  </main>
+</Layout>
+
+<style>
+  .preview-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 2rem;
+  }
+
+  .preview-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+  }
+
+  .preview-content {
+    display: grid;
+    gap: 2rem;
+  }
+
+  .metadata-section,
+  .content-section,
+  .actions-section {
+    background: #f5f5f5;
+    padding: 2rem;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+  }
+
+  .metadata-grid {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  }
+
+  .metadata-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .metadata-item strong {
+    color: #dc2626;
+    font-weight: 600;
+  }
+
+  .markdown-preview {
+    background: white;
+    padding: 2rem;
+    border-radius: 4px;
+    border: 1px solid #e0e0e0;
+    max-height: 500px;
+    overflow-y: auto;
+  }
+
+  .markdown-preview h1,
+  .markdown-preview h2,
+  .markdown-preview h3,
+  .markdown-preview h4,
+  .markdown-preview h5,
+  .markdown-preview h6 {
+    color: #dc2626;
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+  }
+
+  .markdown-preview h1:first-child,
+  .markdown-preview h2:first-child,
+  .markdown-preview h3:first-child {
+    margin-top: 0;
+  }
+
+  .markdown-preview p {
+    line-height: 1.6;
+    margin-bottom: 1rem;
+  }
+
+  .markdown-preview pre {
+    background: #f8f8f8;
+    padding: 1rem;
+    border-radius: 4px;
+    overflow-x: auto;
+  }
+
+  .markdown-preview code {
+    background: #f8f8f8;
+    padding: 0.2rem 0.4rem;
+    border-radius: 2px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .markdown-preview blockquote {
+    border-left: 4px solid #dc2626;
+    padding-left: 1rem;
+    margin: 1rem 0;
+    color: #666;
+  }
+
+  .action-buttons {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: 4px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.2s;
+    border: 2px solid;
+    display: inline-block;
+    cursor: pointer;
+    background: none;
+    font-family: inherit;
+  }
+
+  .btn-primary {
+    background: #dc2626;
+    color: white;
+    border-color: #dc2626;
+  }
+
+  .btn-primary:hover {
+    background: #b91c1c;
+    border-color: #b91c1c;
+  }
+
+  .btn-outline {
+    background: transparent;
+    color: #333;
+    border-color: #333;
+  }
+
+  .btn-outline:hover {
+    background: #333;
+    color: white;
+  }
+
+  .success-message {
+    background: #d1fae5;
+    color: #065f46;
+    padding: 1rem;
+    border-radius: 4px;
+    border: 1px solid #a7f3d0;
+  }
+
+  .error-message {
+    background: #fee2e2;
+    color: #dc2626;
+    padding: 1rem;
+    border-radius: 4px;
+    border: 1px solid #fecaca;
+  }
+
+  h1 {
+    color: #dc2626;
+  }
+
+  h2 {
+    color: #dc2626;
+    margin-bottom: 1rem;
+  }
+
+  @media (max-width: 768px) {
+    .preview-header {
+      flex-direction: column;
+      gap: 1rem;
+      align-items: flex-start;
+    }
+
+    .metadata-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .action-buttons {
+      flex-direction: column;
+    }
+  }
+</style>
+
+<script>
+  let currentDocument = null;
+  let documentId = null;
+
+  // Get document ID from URL hash
+  function getDocumentId() {
+    const hash = window.location.hash.substring(1); // Remove #
+    const params = new URLSearchParams(hash);
+    return params.get('id') || hash; // Support both #id=value and #value formats
+  }
+
+  // Load document data on page load
+  async function loadDocument() {
+    documentId = getDocumentId();
+    
+    if (!documentId) {
+      showError('No document ID provided in URL');
+      return;
+    }
+
+    const loadingMessage = document.getElementById('loading-message');
+    const errorMessage = document.getElementById('error-message');
+    const errorText = document.getElementById('error-text');
+    const previewContent = document.getElementById('preview-content');
+
+    try {
+      // Load document via API call to the drafts store
+      const response = await fetch(`/api/get-draft/${documentId}`);
+      
+      if (response.status === 401) {
+        window.location.href = '/admin/login';
+        return;
+      }
+
+      if (response.status === 404) {
+        throw new Error('Document not found');
+      }
+
+      if (!response.ok) {
+        throw new Error('Failed to load document');
+      }
+
+      const document = await response.json();
+      currentDocument = document;
+      
+      // Hide loading, show content
+      loadingMessage.style.display = 'none';
+      previewContent.style.display = 'block';
+      
+      // Populate metadata
+      const metadataGrid = document.getElementById('metadata-grid');
+      metadataGrid.innerHTML = `
+        <div class="metadata-item">
+          <strong>Title:</strong>
+          <span>${escapeHtml(document.meta.title)}</span>
+        </div>
+        <div class="metadata-item">
+          <strong>Author:</strong>
+          <span>${escapeHtml(document.meta.author)}</span>
+        </div>
+        <div class="metadata-item">
+          <strong>Description:</strong>
+          <span>${escapeHtml(document.meta.description)}</span>
+        </div>
+        <div class="metadata-item">
+          <strong>Publish Date:</strong>
+          <span>${document.meta.publishDate}</span>
+        </div>
+      `;
+      
+      // Render markdown content
+      renderMarkdown(document.markdown);
+      
+    } catch (error) {
+      console.error('Load document error:', error);
+      showError(error.message);
+    }
+  }
+
+  function showError(message) {
+    const loadingMessage = document.getElementById('loading-message');
+    const errorMessage = document.getElementById('error-message');
+    const errorText = document.getElementById('error-text');
+    
+    loadingMessage.style.display = 'none';
+    errorText.textContent = message;
+    errorMessage.style.display = 'block';
+  }
+
+  function renderMarkdown(markdown) {
+    const preview = document.getElementById('markdown-preview');
+    
+    // Simple markdown to HTML conversion
+    let html = markdown
+      .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+      .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+      .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+      .replace(/\*\*(.*)\*\*/gim, '<strong>$1</strong>')
+      .replace(/\*(.*)\*/gim, '<em>$1</em>')
+      .replace(/!\[([^\]]*)\]\(([^)]*)\)/gim, '<img alt="$1" src="$2" style="max-width: 100%; height: auto;" />')
+      .replace(/\[([^\]]*)\]\(([^)]*)\)/gim, '<a href="$2">$1</a>')
+      .replace(/```([\s\S]*?)```/gim, '<pre><code>$1</code></pre>')
+      .replace(/`([^`]*)`/gim, '<code>$1</code>')
+      .replace(/^> (.*$)/gim, '<blockquote>$1</blockquote>')
+      .replace(/\n/gim, '<br>');
+    
+    preview.innerHTML = html;
+  }
+
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
+  async function createPR() {
+    const successMessage = document.getElementById('success-message');
+    const errorMessage = document.getElementById('action-error');
+    
+    successMessage.style.display = 'none';
+    errorMessage.style.display = 'none';
+
+    try {
+      const response = await fetch('/api/create-github-pr', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ documentId }),
+      });
+
+      if (response.status === 401) {
+        window.location.href = '/admin/login';
+        return;
+      }
+
+      if (!response.ok) {
+        throw new Error('Failed to create pull request');
+      }
+
+      const { prUrl, prNumber } = await response.json();
+      
+      successMessage.innerHTML = `
+        <strong>Pull Request Created!</strong><br>
+        <a href="${prUrl}" target="_blank">View PR #${prNumber} on GitHub →</a>
+      `;
+      successMessage.style.display = 'block';
+      
+    } catch (error) {
+      console.error('PR creation error:', error);
+      errorMessage.textContent = 'Failed to create pull request: ' + error.message;
+      errorMessage.style.display = 'block';
+    }
+  }
+
+  async function publishDirect() {
+    const successMessage = document.getElementById('success-message');
+    const errorMessage = document.getElementById('action-error');
+    
+    successMessage.style.display = 'none';
+    errorMessage.style.display = 'none';
+
+    try {
+      const response = await fetch('/api/publish-post', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ documentId }),
+      });
+
+      if (response.status === 401) {
+        window.location.href = '/admin/login';
+        return;
+      }
+
+      if (!response.ok) {
+        throw new Error('Failed to publish directly');
+      }
+
+      const { fileName, filePath } = await response.json();
+      
+      successMessage.innerHTML = `
+        <strong>Article Published!</strong><br>
+        File created: <code>${filePath}</code>
+      `;
+      successMessage.style.display = 'block';
+      
+    } catch (error) {
+      console.error('Direct publish error:', error);
+      errorMessage.textContent = 'Failed to publish directly: ' + error.message;
+      errorMessage.style.display = 'block';
+    }
+  }
+
+  // Load document on page load
+  loadDocument();
+
+  // Make functions globally available
+  window.createPR = createPR;
+  window.publishDirect = publishDirect;
+</script>
