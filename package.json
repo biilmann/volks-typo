@@ -36,7 +36,15 @@
     "@fontsource/oswald": "^5.2.6",
     "@fontsource/roboto-condensed": "^5.2.6",
     "@fontsource/work-sans": "^5.2.6",
-    "astro": "^5.9.1"
+    "@netlify/blobs": "^10.0.4",
+    "@netlify/functions": "^4.1.10",
+    "@notionhq/client": "^4.0.1",
+    "@octokit/rest": "^22.0.0",
+    "astro": "^5.9.1",
+    "gray-matter": "^4.0.3",
+    "jsonwebtoken": "^9.0.2",
+    "marked": "^16.0.0",
+    "openai": "^5.9.0"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.3",

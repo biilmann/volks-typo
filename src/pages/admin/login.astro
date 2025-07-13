@@ -1,0 +1,58 @@
+---
+const url = new URL(Astro.request.url);
+const error = url.searchParams.get('error');
+---
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Login</title>
+    <link rel="stylesheet" href="/styles/global.css" />
+    <style>
+      .login-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        background-color: var(--color-surface);
+      }
+      .card {
+        padding: calc(var(--grid-unit) * 4);
+        background: var(--color-white);
+        border: 1px solid var(--color-border);
+        border-radius: 8px;
+        max-width: 380px;
+        width: 100%;
+        text-align: center;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
+      .error {
+        color: var(--color-accent);
+        margin-bottom: calc(var(--grid-unit) * 2);
+      }
+      .btn {
+        display: inline-block;
+        padding: calc(var(--grid-unit) * 1.5) calc(var(--grid-unit) * 3);
+        background: var(--color-accent);
+        color: var(--color-white);
+        text-decoration: none;
+        border-radius: 4px;
+        font-weight: bold;
+        transition: opacity 0.2s ease;
+      }
+      .btn:hover {
+        opacity: 0.85;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="login-container">
+      <div class="card">
+        <h1>Admin Login</h1>
+        {error && <div class="error">Error: {error}</div>}
+        <a class="btn" href="/.netlify/functions/auth-login">Login with GitHub</a>
+      </div>
+    </div>
+  </body>
+</html>

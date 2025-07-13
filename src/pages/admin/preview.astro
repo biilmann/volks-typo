@@ -1,0 +1,122 @@
+---
+const url = new URL(Astro.request.url);
+const id = url.searchParams.get('id');
+---
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Preview Document</title>
+    <link rel="stylesheet" href="/styles/global.css" />
+    <style>
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: calc(var(--grid-unit) * 4);
+      }
+      .meta {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: calc(var(--grid-unit) * 2);
+        margin-bottom: calc(var(--grid-unit) * 4);
+      }
+      .actions {
+        display: flex;
+        gap: calc(var(--grid-unit) * 2);
+        margin-top: calc(var(--grid-unit) * 4);
+      }
+      .btn {
+        padding: calc(var(--grid-unit) * 1) calc(var(--grid-unit) * 2);
+        background: var(--color-accent);
+        color: var(--color-white);
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: bold;
+        transition: opacity 0.2s ease;
+      }
+      .btn:hover {
+        opacity: 0.85;
+      }
+      #message {
+        margin-top: calc(var(--grid-unit) * 2);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Preview Document</h1>
+      <div id="meta" class="meta"></div>
+      <div id="content"></div>
+      <div class="actions">
+        <button id="pr-btn" class="btn">Create PR</button>
+        <button id="publish-btn" class="btn">Publish Directly</button>
+      </div>
+      <div id="message"></div>
+    </div>
+    <script type="module" client:load>
+      import { marked } from 'marked';
+
+      async function loadDocument() {
+        if (!id) {
+          document.getElementById('message').textContent = 'No document ID provided.';
+          return;
+        }
+        try {
+          const res = await fetch(`/.netlify/functions/get-draft/${id}`);
+          if (res.status === 401) {
+            window.location.href = '/admin/login';
+            return;
+          }
+          if (!res.ok) throw new Error('Failed to load document');
+          const doc = await res.json();
+          const metaDiv = document.getElementById('meta');
+          metaDiv.innerHTML = `
+            <div><strong>Title:</strong> ${doc.meta.title}</div>
+            <div><strong>Author:</strong> ${doc.meta.author}</div>
+            <div><strong>Description:</strong> ${doc.meta.description}</div>
+            <div><strong>Publish Date:</strong> ${doc.meta.publishDate}</div>
+          `;
+          const contentDiv = document.getElementById('content');
+          contentDiv.innerHTML = marked(doc.markdown);
+        } catch (error) {
+          console.error(error);
+          document.getElementById('message').textContent = 'Error loading document.';
+        }
+      }
+
+      loadDocument();
+
+      document.getElementById('pr-btn').addEventListener('click', async () => {
+        try {
+          const res = await fetch('/.netlify/functions/create-github-pr', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ documentId: id }),
+          });
+          const { prUrl } = await res.json();
+          document.getElementById('message').innerHTML = `PR Created: <a href="${prUrl}" target="_blank">${prUrl}</a>`;
+        } catch (error) {
+          console.error(error);
+          document.getElementById('message').textContent = 'Error creating PR.';
+        }
+      });
+
+      document.getElementById('publish-btn').addEventListener('click', async () => {
+        try {
+          const res = await fetch('/.netlify/functions/publish-post', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ documentId: id }),
+          });
+          const data = await res.json();
+          document.getElementById('message').textContent = `Published: ${data.filePath}`;
+        } catch (error) {
+          console.error(error);
+          document.getElementById('message').textContent = 'Error publishing post.';
+        }
+      });
+    </script>
+  </body>
+</html>
