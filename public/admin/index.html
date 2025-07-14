@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Notion Publishing Admin</title>
+  <style>
+    body { font-family: sans-serif; max-width: 800px; margin: 2rem auto; }
+    button { padding: 0.5rem 1rem; margin: 0.5rem 0; }
+    #search-results li { cursor: pointer; margin: 0.25rem 0; }
+    #preview-content { border: 1px solid #ddd; padding: 1rem; margin-top: 1rem; white-space: pre-wrap; background: #f9f9f9; }
+  </style>
+</head>
+<body>
+  <div id="app" style="display:none;">
+    <button id="logout-button">Logout</button>
+    <h1>Notion Publishing Admin</h1>
+    <div>
+      <input type="text" id="search-input" placeholder="Search Notion documents..." />
+      <button id="search-button">Search</button>
+    </div>
+    <ul id="search-results"></ul>
+    <div id="processing-status" style="display:none;">
+      <h2>Processing</h2>
+      <progress id="progress-bar" value="0" max="100"></progress>
+      <p id="status-message"></p>
+    </div>
+    <div id="preview" style="display:none;">
+      <h2>Preview</h2>
+      <div id="preview-content"></div>
+      <button id="publish-direct-button">Publish Direct</button>
+      <button id="create-pr-button">Create PR</button>
+    </div>
+  </div>
+  <script src="/admin/js/auth.js"></script>
+  <script src="/admin/js/search.js"></script>
+  <script src="/admin/js/process.js"></script>
+  <script src="/admin/js/publish.js"></script>
+</body>
+</html>
