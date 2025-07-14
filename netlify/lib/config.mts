@@ -1,11 +1,11 @@
 // GitHub integration configuration
 export const GITHUB_CONFIG = {
   // Repository information
-  owner: 'jdrhyne',
+  owner: 'biilmann',
   repo: 'volks-typo',
 
   // Authorized users who can publish articles
-  authorizedUsers: ['jdrhyne'],
+  authorizedUsers: ['biilmann'],
 
   // Branch naming
   branchPrefix: 'add-article-',
