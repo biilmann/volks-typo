@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Login</title>
+  <style>
+    body { font-family: sans-serif; max-width: 400px; margin: 2rem auto; text-align: center; }
+    button { padding: 0.5rem 1rem; font-size: 1rem; }
+  </style>
+</head>
+<body>
+  <h1>Login</h1>
+  <button id="login-button">Login with GitHub</button>
+  <script>
+    document.getElementById('login-button').addEventListener('click', () => {
+      window.location.href = '/api/auth/login';
+    });
+  </script>
+</body>
+</html>
