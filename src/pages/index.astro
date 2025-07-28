@@ -1,167 +1,71 @@
 ---
 import Layout from '../components/Layout.astro';
-
-const recentPosts = await Astro.glob('./blog/*.md');
-const sortedPosts = recentPosts
-  .sort((a, b) => new Date(b.frontmatter.date).getTime() - new Date(a.frontmatter.date).getTime())
-  .slice(0, 3);
 ---
 
-<Layout title="Volks-Typo: Bauhaus Meets Monumental Design" description="An Astro blog theme exploring the aesthetic tension between Bauhaus modernism and WW2-era monumental design. Where functionalism meets grandeur in dissonant harmony." showSidebar={false}>
+<Layout title="Headless Coding Agents" description="Supercharge your coding workflow with headless AI coding assistants like Claude Code, Codex, and Gemini AI." showSidebar={false}>
   <div class="landing-page">
     <!-- Hero Section -->
     <section class="hero">
       <div class="hero-content">
-        <h1 class="hero-title">Volks-Typo</h1>
-        <p class="hero-subtitle">Bauhaus Meets Monumental</p>
+        <h1 class="hero-title">Headless Coding Agents</h1>
+        <p class="hero-subtitle">Claude Code · Codex · Gemini AI</p>
         <p class="hero-description">
-          An aesthetic exploration where Bauhaus functionalism collides with 
-          monumental grandeur. Form follows function, with a twist.
+          Imagine a coding partner that understands your intent, writes boilerplate, tests your code, and helps you refactor in real time—all without leaving your editor.
         </p>
         <hr class="hero-rule" />
         <div class="hero-actions">
-          <a href="#demo" class="btn btn-primary">View Demo</a>
-          <a href="#installation" class="btn btn-secondary">Get Started</a>
+          <a href="#story" class="btn btn-primary">Learn More</a>
+          <a href="#get-started" class="btn btn-secondary">Get Started</a>
         </div>
       </div>
     </section>
 
-    <!-- Demo Section -->
-    <section class="demo-section" id="demo">
+    <!-- Story Section -->
+    <section class="story" id="story">
       <div class="container">
-        <h2 class="section-title">Live Demo</h2>
-        <p class="demo-description">
-          See the theme in action with sample blog posts that demonstrate all typography, 
-          layout, and design elements working together in perfect dissonant harmony.
+        <h2 class="section-title">A New Workflow Paradigm</h2>
+        <p>
+          Headless coding agents leverage advanced AI models to automate routine tasks, accelerate development, and help you maintain focus on problem-solving and creative design.
         </p>
-        
-        {sortedPosts.length > 0 && (
-          <div class="demo-posts">
-            {sortedPosts.map(post => (
-              <article class="demo-post-card">
-                <h3 class="demo-post-title">
-                  <a href={post.url}>{post.frontmatter.title}</a>
-                </h3>
-                
-                <time class="demo-post-date" datetime={post.frontmatter.date}>
-                  {new Date(post.frontmatter.date).toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                  })}
-                </time>
-                
-                {post.frontmatter.excerpt && (
-                  <p class="demo-post-excerpt">{post.frontmatter.excerpt}</p>
-                )}
-                
-                {post.frontmatter.categories && (
-                  <div class="demo-post-categories">
-                    {post.frontmatter.categories.map((category) => (
-                      <span class="demo-category">{category}</span>
-                    ))}
-                  </div>
-                )}
-              </article>
-            ))}
-          </div>
-        )}
-        
-        <div class="demo-actions">
-          <a href={`${import.meta.env.BASE_URL}blog`} class="btn btn-primary">View Blog</a>
-        </div>
+        <p>
+          From enterprise-grade intelligence in Claude Code to seamless integration in OpenAI Codex and the multimodal power of Google Gemini AI, these agents are redefining how we write, review, and deliver code.
+        </p>
       </div>
     </section>
 
     <!-- Features Section -->
     <section class="features" id="features">
       <div class="container">
-        <h2 class="section-title">Design Philosophy</h2>
+        <h2 class="section-title">Why Headless Agents?</h2>
         <div class="features-grid">
           <div class="feature-card">
-            <h3 class="feature-title">Dissonant Harmony</h3>
-            <p class="feature-description">Bauhaus minimalism meets monumental design. Clean aesthetics with bold, commanding presence.</p>
+            <h3 class="feature-title">Instant Feedback</h3>
+            <p class="feature-description">AI-driven suggestions and code reviews right in your workflow for faster iterations.</p>
           </div>
           <div class="feature-card">
-            <h3 class="feature-title">Perfect Readability</h3>
-            <p class="feature-description">Optimized typography with ideal line lengths and spacing for maximum comprehension.</p>
+            <h3 class="feature-title">Automated Testing</h3>
+            <p class="feature-description">Generate and run tests automatically to ensure code quality and reliability.</p>
           </div>
           <div class="feature-card">
-            <h3 class="feature-title">Left Aligned</h3>
-            <p class="feature-description">Natural reading flow with consistent left alignment throughout all content.</p>
+            <h3 class="feature-title">Seamless Integration</h3>
+            <p class="feature-description">Plug into your editor, CLI, or CI/CD pipeline for maximum flexibility.</p>
           </div>
           <div class="feature-card">
-            <h3 class="feature-title">Typographic Tension</h3>
-            <p class="feature-description">Cormorant Garamond meets Inter. Classical serif headings contrast modern sans-serif body.</p>
-          </div>
-          <div class="feature-card">
-            <h3 class="feature-title">Constructivist Grid</h3>
-            <p class="feature-description">8-point grid system creates structural order. Blood-red rules command attention.</p>
-          </div>
-          <div class="feature-card">
-            <h3 class="feature-title">Fast Performance</h3>
-            <p class="feature-description">Zero JavaScript, minimal CSS, self-hosted fonts for blazing speed.</p>
+            <h3 class="feature-title">Enhanced Creativity</h3>
+            <p class="feature-description">Leverage AI suggestions to explore new patterns and architectures.</p>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- Typography Showcase -->
-    <section class="typography-showcase">
-      <div class="container">
-        <h2 class="section-title">Typography</h2>
-        <p class="typography-description">
-          Work Sans provides exceptional readability across all text sizes and contexts
-        </p>
-        
-        <div class="typography-samples">
-          <div class="type-sample">
-            <h1 class="sample-h1">MONUMENTAL TYPE</h1>
-            <p class="type-meta">Cormorant Garamond • 900 Weight • Blood Red</p>
-          </div>
-          
-          <div class="type-sample">
-            <p class="sample-body">Bauhaus-inspired body text in Inter creates perfect readability. Function meets form in every letterform, optimized for modern screens.</p>
-            <p class="type-meta">Inter • 400 Weight • Charcoal Black</p>
-          </div>
-          
-          <div class="type-sample">
-            <code class="sample-code">npm install volks-typo</code>
-            <p class="type-meta">JetBrains Mono • Monospace Code</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Installation Section -->
-    <section class="installation" id="installation">
-      <div class="container">
-        <h2 class="section-title">Quick Start</h2>
-        <div class="install-steps">
-          <div class="step">
-            <h3 class="step-number">01</h3>
-            <div class="step-content">
-              <h4 class="step-title">Clone Repository</h4>
-              <pre class="code-block"><code>git clone https://github.com/yourusername/volks-typo.git
-cd volks-typo</code></pre>
-            </div>
-          </div>
-          
-          <div class="step">
-            <h3 class="step-number">02</h3>
-            <div class="step-content">
-              <h4 class="step-title">Install Dependencies</h4>
-              <pre class="code-block"><code>npm install</code></pre>
-            </div>
-          </div>
-          
-          <div class="step">
-            <h3 class="step-number">03</h3>
-            <div class="step-content">
-              <h4 class="step-title">Start Development</h4>
-              <pre class="code-block"><code>npm run dev</code></pre>
-            </div>
-          </div>
+    <!-- Get Started Section -->
+    <section class="get-started installation" id="get-started">
+      <div class="container text-center">
+        <h2 class="section-title">Get Started Today</h2>
+        <p>Unlock the full potential of your development workflow with headless coding agents.</p>
+        <div class="hero-actions">
+          <a href="/docs" class="btn btn-primary">Explore Docs</a>
+          <a href="https://github.com/yourorg/yourrepo" class="btn btn-secondary">View on GitHub</a>
         </div>
       </div>
     </section>
